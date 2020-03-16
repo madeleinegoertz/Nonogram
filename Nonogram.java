@@ -1,14 +1,12 @@
 import java.util.ArrayList;
 
-import org.omg.CORBA.UNKNOWN;
-
 public class Nonogram {
 
     private static final int SQUARES_PER_SECTION = 5;
 
-    private static final char FILLED = 254; // square
-    private static final char BLANK = 250; // dot
-    private static final char UNKNOWN = 32; // space
+    private static final char FILLED = 'O'; // square
+    private static final char BLANK = '.'; // dot
+    private static final char UNKNOWN = ' '; // space
     private static final char VERT_DIV = '|';
     private static final char HOR_DIV = '-';
 
@@ -25,6 +23,28 @@ public class Nonogram {
                 board[r][c] = UNKNOWN;
             }
         }
+    }
+
+    public boolean fill(int r, int c) {
+        boolean isValid = isValidSquare(r, c);
+        if (isValid) {
+            if (board[r][c] == FILLED) board[r][c] = UNKNOWN;
+            else board[r][c] = FILLED;
+        }
+        return isValid;
+    }
+
+    public boolean blank(int r, int c) {
+        boolean isValid = isValidSquare(r, c);
+        if (isValid) {
+            if (board[r][c] == BLANK) board[r][c] = UNKNOWN;
+            else board[r][c] = BLANK;
+        }
+        return isValid;
+    }
+
+    private boolean isValidSquare(int r, int c) {
+        return r >= 0 && r < board.length && c >= 0 && c < board[r].length;
     }
 
     public String toString() {

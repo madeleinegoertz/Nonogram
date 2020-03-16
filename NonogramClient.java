@@ -1,3 +1,5 @@
+import java.util.Scanner;
+
 public class NonogramClient {
     public static void main(String[] args) {
         // this is the answer we're trying to generate
@@ -7,12 +9,17 @@ public class NonogramClient {
                         {0, 1, 0, 1, 0},
                         {0, 0, 1, 0, 0}};
         Nonogram nonogram = new Nonogram(grid);
-        nonogram.printRowClues();
-        nonogram.printColClues(); 
-        System.out.println(nonogram);
-        int[][] bigGrid = bigGrid(grid);
-        Nonogram bigNonogram = new Nonogram(bigGrid);
-        System.out.println(bigNonogram);
+        
+        Scanner s = new Scanner(System.in);
+        while (true) {
+            System.out.println(nonogram);
+            System.out.print("Enter a move [r][c][f/b]: ");
+            int r = Integer.parseInt(s.next());
+            int c = Integer.parseInt(s.next());
+            boolean fill = Character.toLowerCase(s.next().charAt(0)) != 'b';
+            if (fill) nonogram.fill(r, c);
+            else nonogram.blank(r, c);
+        }
     }
     
     // makes new grid with four grids.
