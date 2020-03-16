@@ -12,15 +12,15 @@ public class Nonogram {
 
     private ArrayList<Integer>[] rowClues;
     private ArrayList<Integer>[] colClues;
-    private char[][] board;
+    private char[][] grid;
 
-    public Nonogram(int[][] grid) {
-        rowClues = generateClues(true, grid);
-        colClues = generateClues(false, grid);
-        board = new char[grid.length][grid[0].length];
-        for (int r = 0; r < board.length; r++) {
-            for (int c = 0; c < board[r].length; c++) {
-                board[r][c] = UNKNOWN;
+    public Nonogram(int[][] answers) {
+        rowClues = generateClues(true, answers);
+        colClues = generateClues(false, answers);
+        grid = new char[answers.length][answers[0].length];
+        for (int r = 0; r < grid.length; r++) {
+            for (int c = 0; c < grid[r].length; c++) {
+                grid[r][c] = UNKNOWN;
             }
         }
     }
@@ -28,8 +28,8 @@ public class Nonogram {
     public boolean fill(int r, int c) {
         boolean isValid = isValidSquare(r, c);
         if (isValid) {
-            if (board[r][c] == FILLED) board[r][c] = UNKNOWN;
-            else board[r][c] = FILLED;
+            if (grid[r][c] == FILLED) grid[r][c] = UNKNOWN;
+            else grid[r][c] = FILLED;
         }
         return isValid;
     }
@@ -37,14 +37,44 @@ public class Nonogram {
     public boolean blank(int r, int c) {
         boolean isValid = isValidSquare(r, c);
         if (isValid) {
-            if (board[r][c] == BLANK) board[r][c] = UNKNOWN;
-            else board[r][c] = BLANK;
+            if (grid[r][c] == BLANK) grid[r][c] = UNKNOWN;
+            else grid[r][c] = BLANK;
         }
         return isValid;
     }
 
+    public void rowGuesses(int rowNum) {
+        int rows = grid.length;
+        for (int r = 0; r < rows; r++) {
+            int[] leftGuess = new int[rows];
+            int searchCol = 0;
+            for (int clue = 0; clue < rowClues[rowNum].size(); clue++) {
+                int chunkLen = rowClues[rowNum].get(clue);
+                if (isSpaceInRowForChunk(rowNum, chunkLen, searchCol)) {
+                    searchCol += chunkLen + 1;
+                }
+            }
+        }
+    }
+
+    private boolean isSpaceInRowForChunk(int rowNum, int chunkLen, int searchCol) {
+        int cols = grid[rowNum].length;
+        boolean isSpace = false;
+        int blankSpace = 0;
+        int c = searchCol;
+        // is there enough empty space
+        while (!isSpace && c < cols) {
+            if (grid[rowNum][c] != BLANK) blankSpace++;
+            isSpace = blankSpace >= chunkLen;
+            c++;
+        }
+        // square to right must be empty or the wall
+        isSpace = isSpace && (c >= cols - 1 || grid[rowNum][c + 1] != FILLED);
+        return isSpace;
+    }
+
     private boolean isValidSquare(int r, int c) {
-        return r >= 0 && r < board.length && c >= 0 && c < board[r].length;
+        return r >= 0 && r < grid.length && c >= 0 && c < grid[r].length;
     }
 
     public String toString() {
@@ -74,9 +104,9 @@ public class Nonogram {
                 str += String.format("%" + (maxDigits(colClues) + 1) + "s", chunkVal == 0 ? " " : chunkVal);
             }
             // add all the values from the grid
-            for (int c = 0; c < board[r].length; c++) {
+            for (int c = 0; c < grid[r].length; c++) {
                 if (c % SQUARES_PER_SECTION == 0) str += String.format("%" + chunkClueSpace + "c", VERT_DIV);
-                str += String.format("%" + chunkClueSpace + "c", board[r][c]);
+                str += String.format("%" + chunkClueSpace + "c", grid[r][c]);
             }
             // add end line
             str += String.format("%" + chunkClueSpace + "c\n", VERT_DIV);
