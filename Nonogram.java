@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class Nonogram {
 
@@ -23,6 +25,100 @@ public class Nonogram {
                 grid[r][c] = UNKNOWN;
             }
         }
+    }
+
+    private void updateRow(int row) {
+        ArrayList<Integer> unknownSquares = new ArrayList<>(); // list of indices of unknown squares in row.
+        // populate unknownSquares
+        for (int c = 0; c < grid[row].length; c++) {
+            if (grid[row][c] == UNKNOWN) unknownSquares.add(c);
+        }
+
+        int k = sumChunks(row) - numFilledSquares(row); // how many squares still need to be filled
+
+        // list of sets of indices that could be filled (as arrays)
+        ArrayList<int[]> filledSquareGuess = combin(k, unknownSquares);
+        // list of all possible rows as char arrays. All possible, not all valid rows. 
+        ArrayList<char[]> rowGuesses = new ArrayList<>();
+        // populate all possible rows as char arrays
+        for (int i = 0; i < filledSquareGuess.size(); i++) { // loop through every row combination
+            rowGuesses.add(grid[row].clone()); // add in already known squares
+            // add in new info from guesses
+            for (int j = 0; j < filledSquareGuess.get(i).length; j++) { // loop through each index in the guess
+                rowGuesses.get(i)[filledSquareGuess.get(i)[j]] = FILLED;
+            }
+        }
+        
+        // remove invalid row guesses
+        for (int i = rowGuesses.size() - 1; i >= 0; i--) {
+            if (!rowClues[row].equals(generateCluesForLine(rowGuesses.get(i)))) rowGuesses.remove(i);
+        }
+
+        // if square is the same across all possible valid rows, update the grid.
+        if (rowGuesses.size() > 0) {
+            for (int c = 0; c < rowGuesses.get(0).length; c++) {
+                if (squareSameAcrossGuesses(c, rowGuesses)) grid[row][c] = rowGuesses.get(0)[c];
+            }
+        }
+    }
+
+    private boolean squareSameAcrossGuesses(int c, List<char[]> rowGuesses) {
+        boolean squaresSame = true;
+        int i = 1;
+        while (squaresSame && i < rowGuesses.size()) {
+            squaresSame = rowGuesses.get(i)[c] == rowGuesses.get(i - 1)[c];
+            i++;
+        }
+        return squaresSame;
+    }
+
+    // returns sum of all needed filled squares in rom. 
+    // Ex: clue is (2, 1), returns 3
+    private int sumChunks(int row) {
+        int sum = 0;
+        for (int i = 0; i < rowClues[row].size(); i++) {
+            sum += rowClues[row].get(i);
+        }
+        return sum;
+    }
+
+    // returns number of filled squares in row. 
+    private int numFilledSquares(int row) {
+        int sum = 0;
+        for (int c = 0; c < grid[row].length; c++) {
+            if (grid[row][c] == FILLED) sum++;
+        }
+        return sum;
+    }
+
+    // returns a list of sets of k elements from data. 
+    public ArrayList<int[]> combin(int k, ArrayList<Integer> data) {
+        ArrayList<int[]> combinations = new ArrayList<>();
+        int[] combination = new int[k];
+        data.add(data.get(data.size() - 1) + 1);
+        // initialize with first lexicographic combination
+        for (int i = 0; i < k; i++) {
+            combination[i] = data.get(i);
+        }
+        System.out.println(Arrays.toString(combination));
+        int lastVal = data.get(data.size() - 2);
+        System.out.println("lastVal  = " + lastVal);
+        while (combination[k - 1] < lastVal + 1) {
+            combinations.add(combination.clone());
+
+            // generate next combination in lexicographic order
+            int t = k - 1;
+            System.out.println("t = " + t);
+            while (t != 0 && combination[t] == lastVal) {
+                t--;
+            }
+            combination[t] = data.get(data.indexOf(combination[t]) + 1);
+            for (int i = t + 1; i < k; i++) {
+                combination[i] = data.get(data.indexOf(combination[i - 1]) + 1);
+            }
+            System.out.println(Arrays.toString(combination));
+        }
+        return combinations;
     }
 
     public boolean fill(int r, int c) {
@@ -116,7 +212,7 @@ public class Nonogram {
         return str;
     }
 
-    private int chunkVal(int numClue, int numChunk, int maxNumChunks, ArrayList<Integer>[] clues) {
+    private int chunkVal(int numClue, int numChunk, int maxNumChunks, List<Integer>[] clues) {
         int val = 0;
         int offset = maxNumChunks - clues[numClue].size();
         if (numChunk >= offset ) val = clues[numClue].get(numChunk - offset);
@@ -180,6 +276,33 @@ public class Nonogram {
             }
             System.out.println();
         }
+    }
+
+    private ArrayList<Integer> generateCluesForLine(char[] line) {
+        ArrayList<Integer> clues = new ArrayList<>();
+        boolean isChunk = false;
+        int chunkLen = 0;
+        int square = 0;
+        for (int i = 0; i < line.length; i++) {
+            square = line[i];
+            if (isChunk) { // prev block is filled
+                if (square == BLANK) { // O .
+                    clues.add(chunkLen);
+                    isChunk = false;
+                    chunkLen = 0;
+                } else { // O O
+                    chunkLen++;
+                }
+            } else if (square == BLANK) { // O .
+                isChunk = true;
+                chunkLen++;
+            }
+        }
+        // fence-posting for last square
+        if (isChunk && square == FILLED) {
+            clues.add(chunkLen);
+        }
+        return clues;
     }
 
     private ArrayList<Integer>[] generateClues(boolean isRow, int[][] grid) {
