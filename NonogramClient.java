@@ -13,12 +13,18 @@ public class NonogramClient {
         Nonogram nonogram = new Nonogram(grid);
 
         ArrayList<Integer> set = new ArrayList<Integer>();
-        for (int i = 0; i < 5; i++) {
-            set.add(i);
-        }
-        ArrayList<int[]> sets = nonogram.combin(2, set);
+        set.add(1);
+        set.add(3);
+        set.add(5);
+        set.add(7);
+        set.add(9);
+        ArrayList<int[]> sets = nonogram.combin(5, set);
         for (int i = 0; i < sets.size(); i++) {
             System.out.println(Arrays.toString(sets.get(i)));
+        }
+        for (int i = 0; i < nonogram.rows(); i++) {
+            nonogram.updateRow(i);
+            System.out.println(nonogram);
         }
         
         // Scanner s = new Scanner(System.in);

@@ -1,14 +1,13 @@
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class Nonogram {
 
     private static final int SQUARES_PER_SECTION = 5;
 
-    private static final char FILLED = 'O'; // square
-    private static final char BLANK = '.'; // dot
-    private static final char UNKNOWN = ' '; // space
+    private static final char FILLED = 'O';
+    private static final char BLANK = '.';
+    private static final char UNKNOWN = ' ';
     private static final char VERT_DIV = '|';
     private static final char HOR_DIV = '-';
 
@@ -27,7 +26,7 @@ public class Nonogram {
         }
     }
 
-    private void updateRow(int row) {
+    public void updateRow(int row) {
         ArrayList<Integer> unknownSquares = new ArrayList<>(); // list of indices of unknown squares in row.
         // populate unknownSquares
         for (int c = 0; c < grid[row].length; c++) {
@@ -92,33 +91,48 @@ public class Nonogram {
     }
 
     // returns a list of sets of k elements from data. 
+    // note: data must be sorted lowest to highest
     public ArrayList<int[]> combin(int k, ArrayList<Integer> data) {
         ArrayList<int[]> combinations = new ArrayList<>();
         int[] combination = new int[k];
-        data.add(data.get(data.size() - 1) + 1);
         // initialize with first lexicographic combination
         for (int i = 0; i < k; i++) {
             combination[i] = data.get(i);
         }
-        System.out.println(Arrays.toString(combination));
-        int lastVal = data.get(data.size() - 2);
-        System.out.println("lastVal  = " + lastVal);
-        while (combination[k - 1] < lastVal + 1) {
+
+        while (sum(combination) < sumlastCombin(k, data)) {
             combinations.add(combination.clone());
 
             // generate next combination in lexicographic order
             int t = k - 1;
-            System.out.println("t = " + t);
-            while (t != 0 && combination[t] == lastVal) {
+            while (t != 0 && combination[t] == data.get(data.size() - k + t)) {
                 t--;
+                System.out.println("t = " + t);
             }
             combination[t] = data.get(data.indexOf(combination[t]) + 1);
             for (int i = t + 1; i < k; i++) {
                 combination[i] = data.get(data.indexOf(combination[i - 1]) + 1);
             }
-            System.out.println(Arrays.toString(combination));
         }
+        combinations.add(combination.clone());
         return combinations;
+    }
+
+    private int sum(int[] set) {
+        int sum = 0;
+        for (int i = 0; i < set.length; i++) {
+            sum += set[i];
+        }
+        return sum;
+    }
+
+    // returns the last combination (in lexicogrpahical order) of length k from set data
+    private int sumlastCombin(int k, ArrayList<Integer> data) {
+        int sum = 0;
+        for (int i = 0; i < k; i++) {
+            sum += data.get(data.size() - 1 - i);
+        }
+        return sum;
     }
 
     public boolean fill(int r, int c) {
@@ -137,36 +151,6 @@ public class Nonogram {
             else grid[r][c] = BLANK;
         }
         return isValid;
-    }
-
-    public void rowGuesses(int rowNum) {
-        int rows = grid.length;
-        for (int r = 0; r < rows; r++) {
-            int[] leftGuess = new int[rows];
-            int searchCol = 0;
-            for (int clue = 0; clue < rowClues[rowNum].size(); clue++) {
-                int chunkLen = rowClues[rowNum].get(clue);
-                if (isSpaceInRowForChunk(rowNum, chunkLen, searchCol)) {
-                    searchCol += chunkLen + 1;
-                }
-            }
-        }
-    }
-
-    private boolean isSpaceInRowForChunk(int rowNum, int chunkLen, int searchCol) {
-        int cols = grid[rowNum].length;
-        boolean isSpace = false;
-        int blankSpace = 0;
-        int c = searchCol;
-        // is there enough empty space
-        while (!isSpace && c < cols) {
-            if (grid[rowNum][c] != BLANK) blankSpace++;
-            isSpace = blankSpace >= chunkLen;
-            c++;
-        }
-        // square to right must be empty or the wall
-        isSpace = isSpace && (c >= cols - 1 || grid[rowNum][c + 1] != FILLED);
-        return isSpace;
     }
 
     private boolean isValidSquare(int r, int c) {
@@ -341,5 +325,13 @@ public class Nonogram {
             }
         }
         return clues;
+    }
+
+    public int rows() {
+        return grid.length;
+    }
+
+    public int cols() {
+        return grid[0].length;
     }
 }
