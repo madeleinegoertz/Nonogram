@@ -16,7 +16,8 @@ public class NonogramClient {
                                 new File("lib\\" + name + "RowClues.txt"), 
                                 new File("lib\\" + name + "ColClues.txt"));
             tests[i] = new NonogramSolver(puzzle);
-            tests[i].solve();
+            // tests[i].slowSolve();
+            tests[i].queueSolve();
         }
     }
 

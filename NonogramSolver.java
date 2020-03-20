@@ -1,14 +1,47 @@
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class NonogramSolver {
 
     private NonogramPuzzle puzzle;
+    private ArrayList<Action> actions;
 
     public NonogramSolver(NonogramPuzzle puzzle) {
         this.puzzle = puzzle;
+        actions = new ArrayList<Action>();
     }
 
-    public void solve() {
+    public void queueSolve() {
+        long startTime_ns = System.nanoTime();
+        int round = 1;
+        initActions(); // add in the initial set of actions
+        while (!puzzle.isCorrect()) {
+            Action currentAction = actions.remove(0);
+            for (int i = 0; i < currentAction.numIndices(); i++) {
+                puzzle.println("round = " + round);
+                puzzle.println((currentAction.isRow() ? "r = " : "c = ") + currentAction.getIndex(i));
+                updateLine(currentAction.getIndex(i), currentAction.isRow());
+                round++;
+                puzzle.filePrintln(puzzle.toString());
+            }
+            if (actions.size() == 0) initActions();
+        }
+        long endTime_ns = System.nanoTime();
+        puzzle.println(String.format("Time = %.4f seconds", 1.0 * (endTime_ns - startTime_ns) / 1e9));
+    }
+
+    private void initActions() {
+        for (int i = 0; i < Math.max(puzzle.rows(), puzzle.cols()); i++) {
+            if (puzzle.isValidRow(i)) {
+                actions.add(new Action(true, new ArrayList<Integer>(Arrays.asList(i))));
+            }
+            if (puzzle.isValidCol(i)) {
+                actions.add(new Action(false, new ArrayList<Integer>(Arrays.asList(i))));
+            }
+        }
+    }
+
+    public void slowSolve() {
         int round = 1;
         while (!puzzle.isCorrect()) {
             int r = 0;
@@ -70,6 +103,7 @@ public class NonogramSolver {
 
             // if square is the same across all possible valid lines, update the grid.
             if (lineGuesses.size() > 0) {
+                Action newAction = new Action(!isRow);
                 for (int i = 0; i < lineGuesses.get(0).length; i++) {
                     boolean isSquareSame = squareSameAcrossGuesses(i, lineGuesses);
                     if (isSquareSame) {
@@ -78,8 +112,12 @@ public class NonogramSolver {
                         int second = isRow ? i : lineNum;
                         if (isFilled) puzzle.setFilled(first, second);
                         else puzzle.setBlank(first, second);
+                        if (unknownSquares.indexOf(i) != -1) { // square is being updated
+                            newAction.addIndex(i);
+                        }
                     }
                 }
+                if (newAction.numIndices() > 0) actions.add(0, newAction);
             }
         }
     }

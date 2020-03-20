@@ -127,11 +127,11 @@ public class NonogramPuzzle {
         return isValidRow(r) && isValidCol(c);
     }
 
-    private boolean isValidRow(int r) {
+    public boolean isValidRow(int r) {
         return r >= 0 && r < rows();
     }
 
-    private boolean isValidCol(int c) {
+    public boolean isValidCol(int c) {
         return c >= 0 && c < cols();
     }
 
