@@ -1,3 +1,5 @@
+package src;
+
 public class Square {
 
     private static final String FILLED = "O";
